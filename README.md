@@ -68,6 +68,16 @@ LCD + Farmer Dashboard
 - Trained ML prediction model
 - Veterinary dashboard
 - SMS / WhatsApp alerts
+- ## 🔗 Project Documentation
+
+- [System Architecture](docs/architecture.md)
+- [Hardware Pin Connections](hardware/pin-connections.md)
+- [Raspberry Pi Module](hardware/raspberry-pi/README.md)
+- [Software Documentation](software/README.md)
+- [Prototype Demo](docs/demo.md)
+- [Research & Validation](docs/references.md)
+
+---
 - Portable enclosure
 - Real dairy-farm field validation
 - Multi-farm analytics
