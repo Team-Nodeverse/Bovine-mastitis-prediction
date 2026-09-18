@@ -1,0 +1,6 @@
+numpy
+RPi.GPIO
+adafruit-circuitpython-ads1x15
+w1thermsensor
+RPLCD
+smbus2
