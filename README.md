@@ -1,14 +1,28 @@
-# CattleΨiC-Bovine-Mastitis-Prediction
-AI-assisted edge system for early mastitis risk screening in dairy cattle using Raspberry Pi, milk sensors and a farmer dashboard.
+<p align="center">
+  <img src="assets/cattlepsic-logo.png" width="170" alt="CattlePsiC Logo">
+</p>
 
-# 🐄 CattleΨic
+<h1 align="center">CattleΨic</h1>
 
-### AI-Assisted Edge System for Early Mastitis Risk Screening in Dairy Cattle
+<p align="center">
+  <b>AI-Assisted Edge System for Early Mastitis Risk Screening in Dairy Cattle</b>
+</p>
 
-**Team:** Nodverse
+<p align="center">
+  <b>Team Nodverse</b> • Raspberry Pi • Multi-Sensor Milk Analysis • Farmer Dashboard
+</p>
 
-CattleΨic is a Raspberry Pi based cattle-health screening prototype that uses milk pH, electrical conductivity, temperature and turbidity data to identify abnormal patterns associated with mastitis risk.
+---
 
+## 🚀 Project Overview
+
+CattleΨic is a Raspberry Pi based cattle-health screening prototype designed to identify abnormal milk patterns associated with bovine mastitis risk.
+
+The system analyses milk **pH, Electrical Conductivity, Temperature and Turbidity**, performs local edge processing, and presents a simple farmer-friendly risk status through an LCD and web dashboard.
+
+> **Prototype Development: ~60% Complete**
+
+---
 ## 🚀 Key Features
 
 - Raspberry Pi Edge Processing
