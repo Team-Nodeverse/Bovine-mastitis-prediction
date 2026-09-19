@@ -18,7 +18,7 @@
 
 CattleΨic is a Raspberry Pi based cattle-health screening prototype designed to identify abnormal milk patterns associated with bovine mastitis risk.
 
-The current prototype combines **pH, electrical conductivity (EC), temperature and turbidity** measurements with local edge processing, offline storage, LCD output and a farmer-facing dashboard architecture.
+The current prototype combines **pH, electrical conductivity (EC), temperature and turbidity** measurements with local edge processing, offline storage, a larger integrated device-display architecture and a farmer-facing dashboard.
 
 A compact **58 mm thermal receipt printer** is also being designed as a current prototype extension so a farmer can receive a physical test slip alongside the digital result. The receipt formatter is present in the repository; physical printer integration and field testing are still pending.
 
@@ -32,8 +32,10 @@ A compact **58 mm thermal receipt printer** is also being designed as a current 
 
 <p align="center">
   <img src="dashboard-home.png" width="47%" alt="CattlePsiC Dashboard">
-  <img src="assets/hardware-prototype.jpeg" width="47%" alt="CattlePsiC Hardware Prototype">
+  <img src="assets/hardware-prototype.jpeg" width="47%" alt="CattlePsiC Earlier Hardware Prototype">
 </p>
+
+> The hardware photograph documents the earlier prototype stage. The current product direction replaces the small LCD with a larger Raspberry Pi-compatible integrated display/touchscreen.
 
 ---
 
@@ -43,7 +45,7 @@ A compact **58 mm thermal receipt printer** is also being designed as a current 
 - pH, EC, temperature and turbidity sensing pipeline
 - ADS1115 analog sensor interface
 - Multiple-reading averaging
-- 16x4 LCD local result
+- Large local device display / touchscreen architecture
 - Healthy / Attention / High Risk screening states
 - Offline JSON storage when cloud is unavailable
 - Backend POST support for future live synchronization
@@ -67,10 +69,10 @@ Current Rule-Based Risk Screening
      ↓
 Healthy / Attention / High Risk
      ↓
-┌──────────────┬──────────────────┬─────────────────────┐
-│ 16x4 LCD     │ Dashboard/Cloud  │ Thermal Receipt     │
-│              │ + Offline Record │ (integration plan)  │
-└──────────────┴──────────────────┴─────────────────────┘
+┌──────────────────────┬──────────────────┬─────────────────────┐
+│ Large Local Display  │ Dashboard/Cloud  │ Thermal Receipt     │
+│ HDMI/DSI Touch UI    │ + Offline Record │ (integration plan)  │
+└──────────────────────┴──────────────────┴─────────────────────┘
 ```
 
 ## 🔧 Hardware Architecture
@@ -83,9 +85,17 @@ Healthy / Attention / High Risk
 | EC Sensor | Electrical conductivity measurement | Calibration pending |
 | DS18B20 | Temperature measurement | Prototype |
 | Turbidity Sensor | Turbidity / optical-change input | Calibration/evidence validation pending |
-| 16x4 LCD | Local risk result display | Prototype |
+| Large Integrated Display | Farmer-facing local risk, readings and status UI | Software interface available; final hardware model pending |
 | Push Button | Starts a milk test | Prototype |
 | 58 mm Thermal Printer | Prints farmer test receipt | Planned current-device integration |
+
+## 🖥️ Large Device Display
+
+The current product direction removes the small 16x4 LCD and uses a **larger Raspberry Pi-compatible display/touchscreen**, similar to a compact tablet screen.
+
+The Raspberry Pi sensor program writes the latest status to `current_status.json`, while a separate full-screen UI displays the result. This keeps the sensing code independent from the exact HDMI/DSI screen model.
+
+➡️ [View integrated large-display module](hardware/display/README.md)
 
 ## 🧾 Farmer Receipt Output
 
@@ -111,16 +121,17 @@ This is useful for farms with intermittent connectivity and for sharing a result
 - Raspberry Pi sensor acquisition pipeline
 - pH, EC, temperature and turbidity input handling
 - Multiple-reading averaging
-- Local LCD result
 - Rule-based risk screening
 - Offline result storage
 - Backend communication support
 - Farmer dashboard prototype
+- Large-display software interface
 - Receipt text format + Raspberry Pi receipt formatter scaffold
 
 ### 🟡 In Progress
 
 - Sensor calibration with validated reference samples
+- Final large-display hardware selection and enclosure integration
 - Live Raspberry Pi-to-cloud synchronization
 - Physical thermal-printer integration
 - Labelled longitudinal dataset collection
@@ -169,6 +180,7 @@ A dedicated comparison document tracks what is already present in CattleΨic, wh
 - [System Architecture](docs/architecture.md)
 - [SIH26109 Requirement Alignment](docs/sih26109-requirements.md)
 - [Comparison & Gap Analysis](docs/comparison-gap-analysis.md)
+- [Integrated Large Display](hardware/display/README.md)
 - [Thermal Receipt Printer Integration](docs/thermal-receipt-printer.md)
 - [Hardware Pin Connections](hardware/pin-connections.md)
 - [Raspberry Pi Module](hardware/raspberry-pi/README.md)
