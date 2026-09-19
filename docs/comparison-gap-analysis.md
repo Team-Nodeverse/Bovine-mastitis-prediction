@@ -9,7 +9,7 @@ This document compares the current CattleΨic prototype with public mastitis pro
 | Milk sensing | pH, EC, temperature, turbidity | Prototype pipeline available |
 | Edge controller | Raspberry Pi | Available |
 | Analog interface | ADS1115 | Available |
-| Local result | 16x4 LCD | Available in code architecture |
+| Local result | Large Raspberry Pi display/touch UI | Software interface available; final screen model pending |
 | Local test trigger | Push button | Available |
 | Risk engine | Transparent rule-based Healthy / Attention / High Risk screening | Prototype |
 | Noise reduction | Multiple-reading averaging | Available |
@@ -51,6 +51,7 @@ Strength compared with current CattleΨic:
 CattleΨic differentiators:
 - Four milk parameters instead of only conductivity + temperature
 - Raspberry Pi edge computer gives more room for richer local processing
+- Larger local farmer-facing display direction
 - Offline local storage architecture
 - Larger dashboard / cow-history direction
 - Physical farmer receipt concept
@@ -119,16 +120,18 @@ Source reference: SIH26109 – AI-Based Predictive Modelling for Early Forecasti
 | GIS/hotspot map | Not yet | Add farm geo-tag + map layer |
 | Recommendation engine | Not yet | Add evidence-based decision support |
 | Field validation | Pending | Veterinary + dairy-farm testing |
+| Large local display | Software interface exists | Select display hardware + enclosure integration |
 | Printed receipt | CattleΨic extension | Integrate 58 mm thermal printer |
 
 ## 4. Development Priority
 
 ### Priority A – Needed to strengthen the next SIH presentation
-1. Show actual hardware prototype photo and wiring/schematic.
-2. Show the real dashboard screen.
-3. Upload real dashboard/backend source code if available.
-4. Add receipt-printer output as a planned current-device integration, clearly labelled as not yet field-tested.
-5. Present a clear 7–14 day ML validation roadmap instead of an unsupported accuracy number.
+1. Show actual hardware prototype photo and clearly label it as the earlier prototype stage.
+2. Show the large-display/touchscreen product direction separately so judges understand the final device concept.
+3. Show the real dashboard screen.
+4. Upload real dashboard/backend source code if available.
+5. Show the receipt-printer output as a current prototype extension, clearly labelled as physical integration pending.
+6. Present a clear 7–14 day ML validation roadmap instead of an unsupported accuracy number.
 
 ### Priority B – Needed for a technically stronger prototype
 1. Calibrate pH, EC, temperature and turbidity.
@@ -137,14 +140,16 @@ Source reference: SIH26109 – AI-Based Predictive Modelling for Early Forecasti
 4. Train and compare Logistic Regression, Random Forest and boosted-tree models.
 5. Report sensitivity, specificity, precision, recall, F1, ROC-AUC and calibration.
 6. Validate 7-day and 14-day forecast horizons separately.
+7. Connect the large display UI to the final selected screen and enclosure.
 
 ### Priority C – Product differentiation
-1. Compact integrated 58 mm receipt printer.
-2. Offline-first operation for low-connectivity farms.
-3. Farmer + veterinarian dual interface.
-4. Hindi/regional-language workflow.
-5. Wearable activity/rumination extension.
-6. Herd-level and GIS analytics.
+1. Large integrated farmer-facing display.
+2. Compact integrated 58 mm receipt printer.
+3. Offline-first operation for low-connectivity farms.
+4. Farmer + veterinarian dual interface.
+5. Hindi/regional-language workflow.
+6. Wearable activity/rumination extension.
+7. Herd-level and GIS analytics.
 
 ## 5. Recommended Positioning
 
@@ -152,4 +157,4 @@ CattleΨic should be presented as a **multi-parameter, edge-first mastitis risk 
 
 Suggested one-line positioning:
 
-> CattleΨic combines multi-parameter milk sensing, Raspberry Pi edge processing, offline records, farmer-facing outputs and an ML-ready longitudinal data architecture for early mastitis-risk forecasting in Indian dairy farms.
+> CattleΨic combines multi-parameter milk sensing, Raspberry Pi edge processing, a large farmer-facing local display, offline records, printed test slips and an ML-ready longitudinal data architecture for early mastitis-risk forecasting in Indian dairy farms.
