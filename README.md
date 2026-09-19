@@ -133,7 +133,8 @@ The receipt can contain:
 - Validate performance across more cows, farms and milk conditions
 - Calibrate probability/risk thresholds for farmer-facing Low / Moderate / High output
 
-➡️ [View ML module](ml/README.md)
+➡️ [View ML module](ml/README.md)  
+➡️ [View Random Forest model card](ml/model-card.md)
 
 ## 📈 Prototype Status
 
@@ -160,6 +161,8 @@ The receipt can contain:
 - Alert service integration
 - Model evaluation documentation
 
+➡️ [View current device inventory & status](docs/current-device-inventory.md)
+
 ## 🎯 SIH26109 Alignment
 
 CattleΨic is designed around the core SIH26109 direction: sensor hardware, edge AI, animal-wise records, cloud/dashboard connectivity, alerts, offline resilience and scalable herd intelligence.
@@ -175,12 +178,14 @@ The comparison document tracks what CattleΨic already includes, what public mas
 ## 🔗 PPT / Demo Evidence Links
 
 - [GitHub Repository](https://github.com/Team-Nodeverse/Bovine-mastitis-prediction)
+- [Current Device Inventory](docs/current-device-inventory.md)
 - [Working Hardware Evidence](assets/hardware-prototype.jpeg)
 - [Dashboard Preview](dashboard-home.png)
 - [Large Display Design](hardware/display/README.md)
 - [Thermal Receipt Design](docs/thermal-receipt-printer.md)
 - [System Architecture](docs/architecture.md)
 - [ML Module](ml/README.md)
+- [Random Forest Model Card](ml/model-card.md)
 - [PPT Clickable Link Map](docs/ppt-link-map.md)
 
 ## 🔬 Research & Evidence
