@@ -1,6 +1,6 @@
 # ============================================================
 # CattlePsiC - Raspberry Pi Edge Health Screening Prototype
-# Team Nodverse
+# Team Nodeverse
 #
 # Sensors:
 #   ADS1115 A0 -> pH Sensor
@@ -8,29 +8,26 @@
 #   ADS1115 A2 -> Turbidity Sensor
 #   DS18B20    -> Temperature Sensor
 #   GPIO17     -> Push Button
-#   I2C LCD    -> 16x4 Display
+#
+# Local output:
+#   Large Raspberry Pi display / touchscreen reads current_status.json
 #
 # NOTE:
 # This prototype provides mastitis RISK INDICATION only.
 # It is not a veterinary diagnosis.
 # ============================================================
 
-import time
 import json
 import os
-from datetime import datetime
+import time
 
 import requests
 import RPi.GPIO as GPIO
-
 import board
 import busio
-
 import adafruit_ads1x15.ads1115 as ADS
 from adafruit_ads1x15.analog_in import AnalogIn
-
 from w1thermsensor import W1ThermSensor
-from RPLCD.i2c import CharLCD
 
 
 # ============================================================
@@ -39,143 +36,70 @@ from RPLCD.i2c import CharLCD
 
 DEVICE_ID = "RPI_001"
 COW_ID = "COW001"
-
-# Leave empty if cloud/backend is not being used yet.
-# Later example:
-# SERVER_URL = "https://your-domain.com"
 SERVER_URL = ""
-
-# Device token for protected backend.
-# Never upload a real production token to GitHub.
 DEVICE_TOKEN = ""
-
 BUTTON_PIN = 17
-
 SAMPLE_COUNT = 50
 SAMPLE_DELAY = 0.03
-
 OFFLINE_FILE = "offline_readings.json"
+DISPLAY_STATUS_FILE = "current_status.json"
 
 
 # ============================================================
-# SENSOR CALIBRATION
+# SENSOR CALIBRATION PLACEHOLDERS
 # ============================================================
-#
-# These values are STARTING PLACEHOLDERS.
-# Real calibration must be performed using known reference
-# solutions / validated milk samples.
-#
-# Formula:
-# value = voltage * slope + offset
-# ============================================================
+# Real calibration must be performed using validated references.
 
 PH_SLOPE = -5.70
 PH_OFFSET = 21.34
-
 EC_SLOPE = 2.00
 EC_OFFSET = 0.00
-
 TURBIDITY_SLOPE = 1.00
 TURBIDITY_OFFSET = 0.00
 
 
 # ============================================================
-# GPIO
+# GPIO + I2C + ADC
 # ============================================================
 
 GPIO.setmode(GPIO.BCM)
+GPIO.setup(BUTTON_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
-GPIO.setup(
-    BUTTON_PIN,
-    GPIO.IN,
-    pull_up_down=GPIO.PUD_UP
-)
-
-
-# ============================================================
-# I2C + ADS1115
-# ============================================================
-
-i2c = busio.I2C(
-    board.SCL,
-    board.SDA
-)
-
+i2c = busio.I2C(board.SCL, board.SDA)
 ads = ADS.ADS1115(i2c)
 
-ph_channel = AnalogIn(
-    ads,
-    ADS.P0
-)
-
-ec_channel = AnalogIn(
-    ads,
-    ADS.P1
-)
-
-turbidity_channel = AnalogIn(
-    ads,
-    ADS.P2
-)
-
-
-# ============================================================
-# TEMPERATURE SENSOR
-# ============================================================
-
+ph_channel = AnalogIn(ads, ADS.P0)
+ec_channel = AnalogIn(ads, ADS.P1)
+turbidity_channel = AnalogIn(ads, ADS.P2)
 temperature_sensor = W1ThermSensor()
 
 
 # ============================================================
-# LCD
+# LARGE DISPLAY STATUS OUTPUT
 # ============================================================
 
-try:
+def write_display_status(state, message, sensor_data=None, analysis=None):
+    """Write one local JSON state for the integrated display UI."""
 
-    lcd = CharLCD(
-        "PCF8574",
-        address=0x27,
-        port=1,
-        cols=16,
-        rows=4,
-        charmap="A00",
-        auto_linebreaks=True
-    )
+    payload = {
+        "state": state,
+        "message": message,
+        "device_id": DEVICE_ID,
+        "cow_id": COW_ID,
+        "timestamp": int(time.time() * 1000),
+    }
 
-except Exception as error:
+    if sensor_data:
+        payload["sensor_data"] = sensor_data
 
-    print("LCD initialization error:", error)
+    if analysis:
+        payload["analysis"] = analysis
 
-    lcd = None
+    temp_file = DISPLAY_STATUS_FILE + ".tmp"
+    with open(temp_file, "w", encoding="utf-8") as file:
+        json.dump(payload, file, indent=2)
 
-
-# ============================================================
-# LCD HELPER
-# ============================================================
-
-def lcd_show(lines):
-
-    if lcd is None:
-        return
-
-    try:
-
-        lcd.clear()
-
-        for row, text in enumerate(lines[:4]):
-
-            lcd.cursor_pos = (
-                row,
-                0
-            )
-
-            lcd.write_string(
-                str(text)[:16]
-            )
-
-    except Exception as error:
-
-        print("LCD error:", error)
+    os.replace(temp_file, DISPLAY_STATUS_FILE)
 
 
 # ============================================================
@@ -183,92 +107,38 @@ def lcd_show(lines):
 # ============================================================
 
 def average_voltage(channel):
-
     readings = []
 
     for _ in range(SAMPLE_COUNT):
-
         try:
-
-            readings.append(
-                float(channel.voltage)
-            )
-
+            readings.append(float(channel.voltage))
         except Exception:
-
             pass
-
-        time.sleep(
-            SAMPLE_DELAY
-        )
+        time.sleep(SAMPLE_DELAY)
 
     if not readings:
-
         return 0.0
 
     return sum(readings) / len(readings)
 
 
 def convert_ph(voltage):
-
-    ph = (
-        voltage * PH_SLOPE
-        + PH_OFFSET
-    )
-
-    return round(
-        ph,
-        2
-    )
+    return round(voltage * PH_SLOPE + PH_OFFSET, 2)
 
 
 def convert_ec(voltage):
-
-    ec = (
-        voltage * EC_SLOPE
-        + EC_OFFSET
-    )
-
-    return round(
-        ec,
-        2
-    )
+    return round(voltage * EC_SLOPE + EC_OFFSET, 2)
 
 
 def convert_turbidity(voltage):
-
-    turbidity = (
-        voltage * TURBIDITY_SLOPE
-        + TURBIDITY_OFFSET
-    )
-
-    return round(
-        turbidity,
-        2
-    )
+    return round(voltage * TURBIDITY_SLOPE + TURBIDITY_OFFSET, 2)
 
 
 def read_temperature():
-
     try:
-
-        value = (
-            temperature_sensor
-            .get_temperature()
-        )
-
-        return round(
-            value,
-            2
-        )
-
+        return round(temperature_sensor.get_temperature(), 2)
     except Exception as error:
-
-        print(
-            "Temperature error:",
-            error
-        )
-
+        print("Temperature error:", error)
         return 0.0
 
 
@@ -277,213 +147,83 @@ def read_temperature():
 # ============================================================
 
 def read_sensors():
+    print("\nReading sensors...")
+    write_display_status("reading", "Reading milk sensors...")
 
-    print(
-        "\nReading sensors..."
-    )
-
-    lcd_show([
-        "CattlePsiC",
-        "Reading sensors",
-        "Please wait...",
-        ""
-    ])
-
-    ph_voltage = average_voltage(
-        ph_channel
-    )
-
-    ec_voltage = average_voltage(
-        ec_channel
-    )
-
-    turbidity_voltage = average_voltage(
-        turbidity_channel
-    )
-
+    ph_voltage = average_voltage(ph_channel)
+    ec_voltage = average_voltage(ec_channel)
+    turbidity_voltage = average_voltage(turbidity_channel)
     temperature = read_temperature()
 
-    ph = convert_ph(
-        ph_voltage
-    )
-
-    ec = convert_ec(
-        ec_voltage
-    )
-
-    turbidity = convert_turbidity(
-        turbidity_voltage
-    )
-
     return {
-
         "temperature": temperature,
-
-        "ph": ph,
-
-        "ec": ec,
-
-        "turbidity": turbidity,
-
+        "ph": convert_ph(ph_voltage),
+        "ec": convert_ec(ec_voltage),
+        "turbidity": convert_turbidity(turbidity_voltage),
         "raw": {
-
-            "ph_voltage":
-                round(ph_voltage, 4),
-
-            "ec_voltage":
-                round(ec_voltage, 4),
-
-            "turbidity_voltage":
-                round(
-                    turbidity_voltage,
-                    4
-                )
-        }
+            "ph_voltage": round(ph_voltage, 4),
+            "ec_voltage": round(ec_voltage, 4),
+            "turbidity_voltage": round(turbidity_voltage, 4),
+        },
     }
 
 
 # ============================================================
 # RISK ANALYSIS ENGINE
 # ============================================================
-#
 # Prototype heuristic thresholds only.
-# ML model can replace this later.
-# ============================================================
+# Replace with validated ML inference after model validation.
+
 
 def analyze_risk(data):
-
-    temperature = data[
-        "temperature"
-    ]
-
-    ph = data[
-        "ph"
-    ]
-
-    ec = data[
-        "ec"
-    ]
-
-    turbidity = data[
-        "turbidity"
-    ]
+    temperature = data["temperature"]
+    ph = data["ph"]
+    ec = data["ec"]
+    turbidity = data["turbidity"]
 
     risk_points = 0
-
     reasons = []
 
-
-    # ----------------------------------------
-    # TEMPERATURE
-    # ----------------------------------------
-
-    if (
-        temperature > 39.5
-        or temperature < 37.5
-    ):
-
+    if temperature > 39.5 or temperature < 37.5:
         risk_points += 2
-
-        reasons.append(
-            "Abnormal temperature"
-        )
-
-
-    # ----------------------------------------
-    # PH
-    # ----------------------------------------
+        reasons.append("Abnormal temperature")
 
     if ph >= 6.8:
-
         risk_points += 2
-
-        reasons.append(
-            "Elevated pH"
-        )
-
+        reasons.append("Elevated pH")
     elif ph >= 6.6:
-
         risk_points += 1
-
-        reasons.append(
-            "pH requires attention"
-        )
-
-
-    # ----------------------------------------
-    # EC
-    # ----------------------------------------
+        reasons.append("pH requires attention")
 
     if ec >= 5.8:
-
         risk_points += 2
-
-        reasons.append(
-            "High conductivity"
-        )
-
+        reasons.append("High conductivity")
     elif ec >= 5.0:
-
         risk_points += 1
-
-        reasons.append(
-            "EC requires attention"
-        )
-
-
-    # ----------------------------------------
-    # TURBIDITY
-    # ----------------------------------------
+        reasons.append("EC requires attention")
 
     if turbidity >= 3.0:
-
         risk_points += 2
-
-        reasons.append(
-            "Abnormal turbidity"
-        )
-
-
-    # ----------------------------------------
-    # FINAL STATUS
-    # ----------------------------------------
+        reasons.append("Abnormal turbidity")
 
     if risk_points >= 4:
-
         status = "HIGH RISK"
-
         risk_level = "High"
-
     elif risk_points >= 2:
-
         status = "ATTENTION"
-
         risk_level = "Medium"
-
     else:
-
         status = "HEALTHY"
-
         risk_level = "Low"
 
-
     if not reasons:
-
-        reasons.append(
-            "Readings within prototype range"
-        )
-
+        reasons.append("Readings within prototype range")
 
     return {
-
         "status": status,
-
         "risk_level": risk_level,
-
-        "risk_score":
-            min(risk_points * 15, 100),
-
-        "reasons": reasons
+        "risk_score": min(risk_points * 15, 100),
+        "reasons": reasons,
     }
 
 
@@ -492,49 +232,21 @@ def analyze_risk(data):
 # ============================================================
 
 def save_offline(packet):
-
     data = []
 
-    if os.path.exists(
-        OFFLINE_FILE
-    ):
-
+    if os.path.exists(OFFLINE_FILE):
         try:
-
-            with open(
-                OFFLINE_FILE,
-                "r"
-            ) as file:
-
-                data = json.load(
-                    file
-                )
-
+            with open(OFFLINE_FILE, "r", encoding="utf-8") as file:
+                data = json.load(file)
         except Exception:
-
             data = []
 
+    data.append(packet)
 
-    data.append(
-        packet
-    )
+    with open(OFFLINE_FILE, "w", encoding="utf-8") as file:
+        json.dump(data, file, indent=2)
 
-
-    with open(
-        OFFLINE_FILE,
-        "w"
-    ) as file:
-
-        json.dump(
-            data,
-            file,
-            indent=2
-        )
-
-
-    print(
-        "Reading saved offline."
-    )
+    print("Reading saved offline.")
 
 
 # ============================================================
@@ -542,89 +254,35 @@ def save_offline(packet):
 # ============================================================
 
 def send_to_server(packet):
-
     if not SERVER_URL:
-
-        print(
-            "Cloud sync disabled."
-        )
-
-        save_offline(
-            packet
-        )
-
+        print("Cloud sync disabled.")
+        save_offline(packet)
         return False
 
-
-    endpoint = (
-        SERVER_URL.rstrip("/")
-        + "/api/device-data"
-    )
-
-
-    headers = {
-
-        "Content-Type":
-            "application/json"
-    }
-
+    endpoint = SERVER_URL.rstrip("/") + "/api/device-data"
+    headers = {"Content-Type": "application/json"}
 
     if DEVICE_TOKEN:
-
-        headers[
-            "Authorization"
-        ] = (
-            "Bearer "
-            + DEVICE_TOKEN
-        )
-
+        headers["Authorization"] = "Bearer " + DEVICE_TOKEN
 
     try:
-
         response = requests.post(
-
             endpoint,
-
             json=packet,
-
             headers=headers,
-
-            timeout=10
+            timeout=10,
         )
 
-
-        if (
-            200
-            <= response.status_code
-            < 300
-        ):
-
-            print(
-                "Cloud synced successfully."
-            )
-
+        if 200 <= response.status_code < 300:
+            print("Cloud synced successfully.")
             return True
 
-
-        print(
-            "Server error:",
-            response.status_code,
-            response.text
-        )
-
+        print("Server error:", response.status_code, response.text)
 
     except Exception as error:
+        print("Network error:", error)
 
-        print(
-            "Network error:",
-            error
-        )
-
-
-    save_offline(
-        packet
-    )
-
+    save_offline(packet)
     return False
 
 
@@ -633,170 +291,41 @@ def send_to_server(packet):
 # ============================================================
 
 def perform_test():
-
     sensor_data = read_sensors()
-
-    analysis = analyze_risk(
-        sensor_data
-    )
-
+    analysis = analyze_risk(sensor_data)
 
     packet = {
-
-        "device_id":
-            DEVICE_ID,
-
-        "cow_id":
-            COW_ID,
-
-        "temperature":
-            sensor_data[
-                "temperature"
-            ],
-
-        "ph":
-            sensor_data[
-                "ph"
-            ],
-
-        "ec":
-            sensor_data[
-                "ec"
-            ],
-
-        "turbidity":
-            sensor_data[
-                "turbidity"
-            ],
-
-        "timestamp":
-            int(
-                time.time() * 1000
-            ),
-
-        "risk_status":
-            analysis[
-                "status"
-            ],
-
-        "risk_level":
-            analysis[
-                "risk_level"
-            ]
+        "device_id": DEVICE_ID,
+        "cow_id": COW_ID,
+        "temperature": sensor_data["temperature"],
+        "ph": sensor_data["ph"],
+        "ec": sensor_data["ec"],
+        "turbidity": sensor_data["turbidity"],
+        "timestamp": int(time.time() * 1000),
+        "risk_status": analysis["status"],
+        "risk_level": analysis["risk_level"],
     }
 
+    print("\n======================")
+    print("CattlePsiC Test")
+    print("======================")
+    print("Temperature:", sensor_data["temperature"], "C")
+    print("pH:", sensor_data["ph"])
+    print("EC:", sensor_data["ec"])
+    print("Turbidity:", sensor_data["turbidity"])
+    print("Status:", analysis["status"])
+    print("Risk:", analysis["risk_level"])
+    print("Reasons:", ", ".join(analysis["reasons"]))
 
-    print(
-        "\n======================"
+    write_display_status(
+        "result",
+        "Milk test complete",
+        sensor_data=sensor_data,
+        analysis=analysis,
     )
 
-    print(
-        "CattlePsiC Test"
-    )
-
-    print(
-        "======================"
-    )
-
-    print(
-        "Temperature:",
-        sensor_data[
-            "temperature"
-        ],
-        "C"
-    )
-
-    print(
-        "pH:",
-        sensor_data[
-            "ph"
-        ]
-    )
-
-    print(
-        "EC:",
-        sensor_data[
-            "ec"
-        ]
-    )
-
-    print(
-        "Turbidity:",
-        sensor_data[
-            "turbidity"
-        ]
-    )
-
-    print(
-        "Status:",
-        analysis[
-            "status"
-        ]
-    )
-
-    print(
-        "Risk:",
-        analysis[
-            "risk_level"
-        ]
-    )
-
-    print(
-        "Reasons:",
-        ", ".join(
-            analysis[
-                "reasons"
-            ]
-        )
-    )
-
-
-    lcd_show([
-
-        "CattlePsiC",
-
-        "T:{:.1f} pH:{:.2f}".format(
-            sensor_data[
-                "temperature"
-            ],
-
-            sensor_data[
-                "ph"
-            ]
-        ),
-
-        "EC:{:.2f} Tur:{:.1f}".format(
-            sensor_data[
-                "ec"
-            ],
-
-            sensor_data[
-                "turbidity"
-            ]
-        ),
-
-        analysis[
-            "status"
-        ]
-    ])
-
-
-    synced = send_to_server(
-        packet
-    )
-
-
-    if synced:
-
-        print(
-            "Status: CLOUD SYNCED"
-        )
-
-    else:
-
-        print(
-            "Status: OFFLINE SAVED"
-        )
+    synced = send_to_server(packet)
+    print("Status:", "CLOUD SYNCED" if synced else "OFFLINE SAVED")
 
 
 # ============================================================
@@ -804,90 +333,27 @@ def perform_test():
 # ============================================================
 
 def main():
+    print("\nCattlePsiC")
+    print("Team Nodeverse")
+    print("Raspberry Pi Edge Prototype")
+    print("Press button to start test.")
 
-    print(
-        "\nCattlePsiC"
-    )
-
-    print(
-        "Team Nodverse"
-    )
-
-    print(
-        "Raspberry Pi Edge Prototype"
-    )
-
-    print(
-        "Press button to start test."
-    )
-
-
-    lcd_show([
-
-        "CattlePsiC",
-
-        "Team Nodverse",
-
-        "Press button",
-
-        "to test milk"
-    ])
-
+    write_display_status("ready", "Press button to start milk test")
 
     try:
-
         while True:
-
-            if (
-                GPIO.input(
-                    BUTTON_PIN
-                )
-                == GPIO.LOW
-            ):
-
+            if GPIO.input(BUTTON_PIN) == GPIO.LOW:
                 perform_test()
-
-                time.sleep(
-                    1.5
-                )
-
-                lcd_show([
-
-                    "CattlePsiC",
-
-                    "Test complete",
-
-                    "Press button",
-
-                    "for next test"
-                ])
-
-
-            time.sleep(
-                0.1
-            )
-
+                time.sleep(1.5)
+            time.sleep(0.1)
 
     except KeyboardInterrupt:
-
-        print(
-            "\nProgram stopped."
-        )
-
+        print("\nProgram stopped.")
+        write_display_status("stopped", "Device stopped")
 
     finally:
-
         GPIO.cleanup()
 
-        if lcd:
-
-            lcd.clear()
-
-
-# ============================================================
-# START
-# ============================================================
 
 if __name__ == "__main__":
-
     main()
