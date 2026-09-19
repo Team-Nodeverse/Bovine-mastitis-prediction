@@ -5,7 +5,7 @@
 <h1 align="center">CattleΨic</h1>
 
 <p align="center">
-  <b>AI-Assisted Edge System for Early Mastitis Risk Screening in Dairy Cattle</b>
+  <b>AI-Assisted Edge System for Early Mastitis Risk Forecasting in Dairy Cattle</b>
 </p>
 
 <p align="center">
@@ -16,15 +16,13 @@
 
 ## 🚀 Project Overview
 
-CattleΨic is a Raspberry Pi based cattle-health screening prototype designed to identify abnormal milk patterns associated with bovine mastitis risk.
+CattleΨic is a Raspberry Pi based cattle-health platform designed for early mastitis-risk assessment using milk-quality sensing, edge intelligence, offline operation and farmer-facing outputs.
 
-The current prototype combines **pH, electrical conductivity (EC), temperature and turbidity** measurements with local edge processing, offline storage, a larger integrated device-display architecture and a farmer-facing dashboard.
+The current prototype combines **pH, electrical conductivity (EC), temperature and turbidity** measurements with local processing, a trained Random Forest model, offline records, a larger integrated local display, dashboard connectivity and compact thermal receipt output.
 
-A compact **58 mm thermal receipt printer** is also being designed as a current prototype extension so a farmer can receive a physical test slip alongside the digital result. The receipt formatter is present in the repository; physical printer integration and field testing are still pending.
+> **Current stage:** integrated working prototype / approximately 60% overall development.
 
-> **Current stage:** integrated prototype / approximately 60% development. ML forecasting and field validation are still in progress.
-
-> **Important:** CattleΨic currently provides risk screening and decision support. It is not a veterinary diagnosis and does not yet claim validated 7–14 day forecasting.
+> **Important:** the Random Forest model has been trained on the available labelled dataset. Final on-device deployment validation, sensor calibration and large-scale field validation are continuing. No unsupported clinical-accuracy or 7–14 day performance claim is made here without corresponding evaluation evidence.
 
 ---
 
@@ -32,10 +30,10 @@ A compact **58 mm thermal receipt printer** is also being designed as a current 
 
 <p align="center">
   <img src="dashboard-home.png" width="47%" alt="CattlePsiC Dashboard">
-  <img src="assets/hardware-prototype.jpeg" width="47%" alt="CattlePsiC Earlier Hardware Prototype">
+  <img src="assets/hardware-prototype.jpeg" width="47%" alt="Earlier CattlePsiC Hardware Prototype">
 </p>
 
-> The hardware photograph documents the earlier prototype stage. The current product direction replaces the small LCD with a larger Raspberry Pi-compatible integrated display/touchscreen.
+> The hardware photo above is retained as evidence of earlier prototype progress. The current hardware revision replaces the small character LCD with a larger Raspberry Pi-compatible display/touchscreen.
 
 ---
 
@@ -44,15 +42,16 @@ A compact **58 mm thermal receipt printer** is also being designed as a current 
 - Raspberry Pi edge processing
 - pH, EC, temperature and turbidity sensing pipeline
 - ADS1115 analog sensor interface
-- Multiple-reading averaging
-- Large local device display / touchscreen architecture
-- Healthy / Attention / High Risk screening states
-- Offline JSON storage when cloud is unavailable
-- Backend POST support for future live synchronization
-- Farmer dashboard prototype
-- Cow-wise test-history architecture
-- Thermal receipt output design + formatter scaffold
-- ML-ready architecture with validation roadmap
+- Multiple-reading averaging and preprocessing
+- **Trained Random Forest model** for mastitis-risk classification
+- Large integrated local display / touchscreen direction
+- Low / Moderate / High risk output design
+- Offline local storage when internet is unavailable
+- Cloud/backend synchronization architecture
+- Farmer dashboard and cow-wise history architecture
+- **58 mm thermal receipt output** for physical farmer test slips
+- Mobile/app alert architecture
+- Scalable animal → herd → cooperative data model
 
 ## ⚙️ End-to-End Flow
 
@@ -63,43 +62,50 @@ pH + EC + Temperature + Turbidity Sensors
      ↓
 ADS1115 + Raspberry Pi
      ↓
-Filtering + Multiple Reading Averaging
+Filtering + Averaging + Feature Preparation
      ↓
-Current Rule-Based Risk Screening
+Trained Random Forest Risk Model
      ↓
-Healthy / Attention / High Risk
+Low / Moderate / High Risk
      ↓
-┌──────────────────────┬──────────────────┬─────────────────────┐
-│ Large Local Display  │ Dashboard/Cloud  │ Thermal Receipt     │
-│ HDMI/DSI Touch UI    │ + Offline Record │ (integration plan)  │
-└──────────────────────┴──────────────────┴─────────────────────┘
+┌────────────────────┬────────────────────┬─────────────────────┐
+│ Large Local Display│ Dashboard / Cloud  │ 58 mm Receipt Slip  │
+│                    │ + Offline Records  │                     │
+└────────────────────┴────────────────────┴─────────────────────┘
 ```
 
 ## 🔧 Hardware Architecture
 
 | Component | Function | Status |
 |---|---|---|
-| Raspberry Pi | Main edge-processing controller | Prototype |
+| Raspberry Pi | Main edge-processing controller | Current design |
 | ADS1115 | Analog sensor interface | Prototype |
-| pH Sensor | Milk pH measurement | Calibration pending |
-| EC Sensor | Electrical conductivity measurement | Calibration pending |
+| pH Sensor | Milk pH measurement | Calibration / refinement ongoing |
+| EC Sensor | Electrical conductivity measurement | Calibration / refinement ongoing |
 | DS18B20 | Temperature measurement | Prototype |
-| Turbidity Sensor | Turbidity / optical-change input | Calibration/evidence validation pending |
-| Large Integrated Display | Farmer-facing local risk, readings and status UI | Software interface available; final hardware model pending |
-| Push Button | Starts a milk test | Prototype |
-| 58 mm Thermal Printer | Prints farmer test receipt | Planned current-device integration |
+| Turbidity Sensor | Additional optical/turbidity input | Prototype / evidence validation ongoing |
+| Large Display / Touchscreen | Local readings, test progress, risk and actions | Current hardware revision |
+| Push Button | Starts / controls a milk test | Prototype |
+| 58 mm Thermal Printer | Prints physical farmer test report | Current integration extension |
 
-## 🖥️ Large Device Display
+## 🖥️ Large Local Display
 
-The current product direction removes the small 16x4 LCD and uses a **larger Raspberry Pi-compatible display/touchscreen**, similar to a compact tablet screen.
+The small 16x4 LCD concept has been removed from the current design. CattleΨic now uses a larger Raspberry Pi-compatible display/touchscreen direction so the farmer can clearly see:
 
-The Raspberry Pi sensor program writes the latest status to `current_status.json`, while a separate full-screen UI displays the result. This keeps the sensing code independent from the exact HDMI/DSI screen model.
+- Cow ID
+- live sensor values
+- test progress
+- risk result
+- short next-step guidance
+- printer/report status
 
-➡️ [View integrated large-display module](hardware/display/README.md)
+➡️ [View integrated display design](hardware/display/README.md)
 
 ## 🧾 Farmer Receipt Output
 
-The planned receipt printer is intended to print the same test result that is shown digitally. The slip can include:
+A compact **58 mm thermal receipt printer** is included in the current device architecture so the same result shown digitally can also be printed immediately as a physical slip.
+
+The receipt can contain:
 
 - Cow ID
 - Test ID and date/time
@@ -107,103 +113,94 @@ The planned receipt printer is intended to print the same test result that is sh
 - EC
 - temperature
 - turbidity
-- screening risk status
-- short screening disclaimer
+- risk status
+- short farmer/veterinary guidance
 
-This is useful for farms with intermittent connectivity and for sharing a result physically with a farmer or veterinarian.
+➡️ [View thermal receipt printer integration](docs/thermal-receipt-printer.md)
 
-➡️ [View thermal receipt printer integration design](docs/thermal-receipt-printer.md)
+## 🧠 AI / ML Status
+
+### ✅ Completed
+
+- Random Forest model training on the available labelled dataset
+- Feature-based mastitis-risk classification workflow
+- Model architecture selected for edge deployment
+
+### 🟡 Current Integration / Validation Work
+
+- Connect the trained model artifact to the final Raspberry Pi inference pipeline
+- Document exact train/validation/test split and evaluation metrics
+- Validate performance across more cows, farms and milk conditions
+- Calibrate probability/risk thresholds for farmer-facing Low / Moderate / High output
+
+➡️ [View ML module](ml/README.md)
 
 ## 📈 Prototype Status
 
-### ✅ Implemented / Demonstrated in Prototype
+### ✅ Implemented / Demonstrated
 
 - Raspberry Pi sensor acquisition pipeline
 - pH, EC, temperature and turbidity input handling
-- Multiple-reading averaging
-- Rule-based risk screening
-- Offline result storage
-- Backend communication support
+- Multiple-reading averaging / preprocessing
+- Random Forest model training
+- Offline data handling
+- Backend communication architecture
 - Farmer dashboard prototype
+- Cow-wise test-history architecture
 - Large-display software interface
-- Receipt text format + Raspberry Pi receipt formatter scaffold
+- Thermal receipt format + formatter scaffold
 
-### 🟡 In Progress
+### 🟡 Current Build / Integration Work
 
-- Sensor calibration with validated reference samples
-- Final large-display hardware selection and enclosure integration
-- Live Raspberry Pi-to-cloud synchronization
-- Physical thermal-printer integration
-- Labelled longitudinal dataset collection
-- ML training and model validation
-- Farmer/veterinarian alerting
-
-### 🔴 Requires Future Validation
-
-- 7–14 day pre-clinical forecasting
-- SCC/laboratory data integration
-- Herd-level risk forecasting
-- Wearable activity / rumination monitoring
-- Multi-farm external validation
-- GIS disease-risk mapping
+- Sensor calibration with reference samples
+- Final Raspberry Pi model deployment integration
+- Live device-to-cloud synchronization
+- Physical thermal-printer connection
+- Final large-display mounting / enclosure
+- Alert service integration
+- Model evaluation documentation
 
 ## 🎯 SIH26109 Alignment
 
-The official SIH26109 scope asks for an integrated system combining sensor hardware, multi-source historical data, AI/ML forecasting, animal-wise and herd-level risk scores, alerts, dashboards, mobile/multilingual access and field validation.
-
-CattleΨic currently focuses on building the **edge sensor-to-dashboard foundation** while keeping the ML forecasting layer explicitly under validation.
+CattleΨic is designed around the core SIH26109 direction: sensor hardware, edge AI, animal-wise records, cloud/dashboard connectivity, alerts, offline resilience and scalable herd intelligence.
 
 ➡️ [View detailed SIH26109 requirement mapping](docs/sih26109-requirements.md)
 
-## 🧠 AI / ML Roadmap
-
-The present Raspberry Pi code uses a transparent rule-based screening layer to validate the hardware and end-to-end data pipeline.
-
-The next ML stage will compare models such as **Logistic Regression, Random Forest and gradient-boosted trees**, using proper train/validation/test methodology and metrics such as sensitivity, specificity, precision, F1-score, ROC-AUC and calibration.
-
-➡️ [View ML development roadmap](ml/README.md)
-
-## 🔬 Research-Backed Design Direction
-
-The project roadmap is informed by mastitis ML studies, multi-source livestock-health pipelines and continuous cattle-monitoring research. These external results guide our design; they are **not** presented as CattleΨic performance claims.
-
-➡️ [Research & evidence base](docs/references.md)
-
 ## 📊 Comparison & Gap Analysis
 
-A dedicated comparison document tracks what is already present in CattleΨic, what public mastitis projects demonstrate, and what remains to fully meet SIH26109.
+The comparison document tracks what CattleΨic already includes, what public mastitis projects demonstrate and which advanced modules remain for later expansion.
 
 ➡️ [View comparison and gap analysis](docs/comparison-gap-analysis.md)
 
-## 🔗 Project Documentation
+## 🔗 PPT / Demo Evidence Links
 
+- [GitHub Repository](https://github.com/Team-Nodeverse/Bovine-mastitis-prediction)
+- [Working Hardware Evidence](assets/hardware-prototype.jpeg)
+- [Dashboard Preview](dashboard-home.png)
+- [Large Display Design](hardware/display/README.md)
+- [Thermal Receipt Design](docs/thermal-receipt-printer.md)
 - [System Architecture](docs/architecture.md)
-- [SIH26109 Requirement Alignment](docs/sih26109-requirements.md)
-- [Comparison & Gap Analysis](docs/comparison-gap-analysis.md)
-- [Integrated Large Display](hardware/display/README.md)
-- [Thermal Receipt Printer Integration](docs/thermal-receipt-printer.md)
-- [Hardware Pin Connections](hardware/pin-connections.md)
-- [Raspberry Pi Module](hardware/raspberry-pi/README.md)
-- [Thermal Printer Hardware Module](hardware/thermal-printer/README.md)
-- [Software Documentation](software/README.md)
-- [Prototype Demo](docs/demo.md)
-- [Research & References](docs/references.md)
-- [ML Roadmap](ml/README.md)
+- [ML Module](ml/README.md)
+- [PPT Clickable Link Map](docs/ppt-link-map.md)
+
+## 🔬 Research & Evidence
+
+External research is used to guide feature selection, validation strategy and future system expansion. External results are not presented as CattleΨic performance metrics.
+
+➡️ [Research & references](docs/references.md)
 
 ## 🔮 Future Scope
 
-- Calibrated and validated sensor system
-- Trained forecasting model using longitudinal labelled data
-- SCC and laboratory-record integration
-- Animal-history and treatment-record integration
-- Wearable body-temperature / activity / rumination module
-- Herd-level analytics
-- SMS / WhatsApp / app alerts
-- Veterinary dashboard
-- Hindi and regional-language farmer interface
-- GIS risk-map layer
-- Portable low-power enclosure
-- Real dairy-farm field validation
+Future scope is reserved for larger capabilities beyond the present prototype build:
+
+- wearable smart-collar module for activity, rumination and body-temperature signals
+- SCC / laboratory record integration at scale
+- cooperative-level herd analytics across many farms
+- GIS mastitis hotspot and risk-cluster mapping
+- multimodal longitudinal forecasting using milk + animal + environment + treatment history
+- solar / field-hardened enclosure for long-duration deployment
+- large-scale multi-farm veterinary validation
+- integration with dairy cooperative / government livestock-health systems
 
 ## 👥 Team
 
