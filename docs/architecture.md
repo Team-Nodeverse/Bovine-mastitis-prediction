@@ -2,9 +2,11 @@
 
 ## Overview
 
-CattleΨic uses a Raspberry Pi as the edge-processing unit to collect and analyse multiple milk parameters for early mastitis-risk screening.
+CattleΨic uses a Raspberry Pi as the edge-processing unit to collect and analyse multiple milk parameters for mastitis-risk assessment.
 
-The current prototype focuses on the sensor-to-result pipeline. Validated ML forecasting, final large-display hardware selection, physical thermal-printer integration and field validation are still under development.
+The current hardware revision uses a **large integrated display / touchscreen** instead of the earlier small character LCD, and includes a **58 mm thermal receipt printer** in the device output architecture.
+
+The Random Forest model has been trained on the currently available labelled dataset. Current work focuses on final Raspberry Pi deployment integration, calibration and validation documentation.
 
 ## System Architecture
 
@@ -24,66 +26,88 @@ The current prototype focuses on the sensor-to-result pipeline. Validated ML for
                            │
              ┌─────────────┴─────────────┐
              │                           │
-      DS18B20 Temperature        Sensor Processing
+      DS18B20 Temperature        Data Preprocessing
                                          │
                                          ▼
-                              Filtering & Averaging
+                            Filtering / Averaging
                                          │
                                          ▼
-                              Risk Analysis Layer
+                           Feature Preparation
                                          │
-                            ┌────────────┼────────────┐
-                            ▼            ▼            ▼
-                         Healthy     Attention     High Risk
+                                         ▼
+                           Trained Random Forest
+                                         │
+                               Risk Classification
+                                         │
+                          ┌──────────────┼──────────────┐
+                          ▼              ▼              ▼
+                        LOW          MODERATE          HIGH
                                          │
                   ┌──────────────────────┼──────────────────────┐
                   ▼                      ▼                      ▼
-       Large Local Display        Offline Storage       Receipt Formatter
-       (HDMI/DSI Touch UI)              │                      │
-                  │                     ▼                      ▼
-                  │              Backend / Cloud      58 mm Thermal Printer
-                  │                     │               (integration planned)
-                  │          ┌──────────┴──────────┐
-                  └─────────►▼                     ▼
-                       Farmer Dashboard       Health History
+          Large Local Display      Dashboard / Cloud     58 mm Receipt
+          / Touchscreen UI         + Offline Records      Printer Output
 ```
 
 ## Current Edge Functions
 
-- Multi-sensor data acquisition
-- Multiple-reading averaging
-- pH, EC, temperature and turbidity value handling
-- Rule-based Healthy / Attention / High Risk screening
-- Local large-display status output through `current_status.json`
-- Offline JSON storage
-- Backend POST support
+- multi-sensor data acquisition
+- pH, EC, temperature and turbidity handling
+- multiple-reading averaging
+- preprocessing / feature preparation
+- trained Random Forest model workflow
+- local risk classification output
+- offline record storage
+- dashboard / backend communication architecture
+- thermal receipt formatting
 
-## Local Display Strategy
+## Large Display Strategy
 
-The earlier 16x4 LCD concept has been removed from the current design direction. The final device is planned around a larger Raspberry Pi-compatible HDMI/DSI display or touchscreen.
+The earlier 16x4 LCD concept has been removed from the current design direction.
 
-The sensor process writes a common local status object. A separate display UI reads that file and presents large, farmer-friendly values and risk status. This keeps the software independent from the exact display model.
+The new local display is intended to show:
+
+- Cow ID
+- sensor values
+- test progress
+- mastitis-risk level
+- next-step guidance
+- connectivity status
+- receipt / print status
+
+The final screen may use a Raspberry Pi-compatible HDMI, DSI or touchscreen panel depending on enclosure and power constraints.
 
 See: [Integrated Large Display](../hardware/display/README.md)
 
 ## Output Strategy
 
-One test result object is intended to feed all user outputs:
+One structured test result should feed all outputs:
 
-- Large local device display
-- Dashboard/mobile interface
-- Offline record
-- Cloud/backend history
-- Compact thermal receipt
+- large local device display
+- farmer dashboard / mobile interface
+- local offline record
+- cloud history
+- 58 mm physical receipt
 
-Using one common test object reduces the risk of different values being shown on different outputs.
+This prevents different values being shown on different user interfaces.
 
 ## Thermal Receipt Integration
 
-A compact 58 mm thermal receipt printer is being treated as a **current prototype extension**, not as a field-validated feature. The receipt can contain Cow ID, test time, sensor readings, risk status and a screening disclaimer.
+The 58 mm thermal printer is included as a current device integration extension. The physical slip can contain:
+
+- Cow ID
+- test date/time
+- pH
+- EC
+- temperature
+- turbidity
+- risk result
+- next-step guidance
 
 See: [Thermal Receipt Printer Integration](thermal-receipt-printer.md)
 
-## AI/ML Layer
+## AI / ML Layer
 
-The current Raspberry Pi prototype uses rule-based screening to validate the end-to-end hardware/data path. The planned ML layer will use labelled longitudinal dairy data and compare models such as Logistic Regression, Random Forest and gradient-boosted trees using proper validation methodology.
+The Random Forest model has been trained on the available labelled dataset. The remaining ML work is focused on deployment integration and documented validation rather than initial model training.
+
+Validation documentation should include the actual measured metrics from the model run and, for SIH26109's early-forecasting objective, separate evaluation of pre-clinical forecast horizons when longitudinal data is available.
