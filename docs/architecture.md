@@ -4,7 +4,7 @@
 
 CattleΨic uses a Raspberry Pi as the edge-processing unit to collect and analyse multiple milk parameters for early mastitis-risk screening.
 
-The current prototype focuses on the sensor-to-result pipeline. ML forecasting, thermal-printer hardware integration and field validation are still under development.
+The current prototype focuses on the sensor-to-result pipeline. Validated ML forecasting, final large-display hardware selection, physical thermal-printer integration and field validation are still under development.
 
 ## System Architecture
 
@@ -38,13 +38,13 @@ The current prototype focuses on the sensor-to-result pipeline. ML forecasting, 
                                          │
                   ┌──────────────────────┼──────────────────────┐
                   ▼                      ▼                      ▼
-             16x4 LCD              Offline Storage       Receipt Formatter
-                                         │                      │
-                                         ▼                      ▼
-                                  Backend / Cloud      58 mm Thermal Printer
-                                         │               (integration planned)
-                              ┌──────────┴──────────┐
-                              ▼                     ▼
+       Large Local Display        Offline Storage       Receipt Formatter
+       (HDMI/DSI Touch UI)              │                      │
+                  │                     ▼                      ▼
+                  │              Backend / Cloud      58 mm Thermal Printer
+                  │                     │               (integration planned)
+                  │          ┌──────────┴──────────┐
+                  └─────────►▼                     ▼
                        Farmer Dashboard       Health History
 ```
 
@@ -54,15 +54,23 @@ The current prototype focuses on the sensor-to-result pipeline. ML forecasting, 
 - Multiple-reading averaging
 - pH, EC, temperature and turbidity value handling
 - Rule-based Healthy / Attention / High Risk screening
-- LCD output
+- Local large-display status output through `current_status.json`
 - Offline JSON storage
 - Backend POST support
+
+## Local Display Strategy
+
+The earlier 16x4 LCD concept has been removed from the current design direction. The final device is planned around a larger Raspberry Pi-compatible HDMI/DSI display or touchscreen.
+
+The sensor process writes a common local status object. A separate display UI reads that file and presents large, farmer-friendly values and risk status. This keeps the software independent from the exact display model.
+
+See: [Integrated Large Display](../hardware/display/README.md)
 
 ## Output Strategy
 
 One test result object is intended to feed all user outputs:
 
-- Local LCD
+- Large local device display
 - Dashboard/mobile interface
 - Offline record
 - Cloud/backend history
@@ -72,7 +80,7 @@ Using one common test object reduces the risk of different values being shown on
 
 ## Thermal Receipt Integration
 
-A compact 58 mm thermal receipt printer is being treated as a **current prototype extension**, not as a field-validated feature. The receipt will contain Cow ID, test time, sensor readings, risk status and a screening disclaimer.
+A compact 58 mm thermal receipt printer is being treated as a **current prototype extension**, not as a field-validated feature. The receipt can contain Cow ID, test time, sensor readings, risk status and a screening disclaimer.
 
 See: [Thermal Receipt Printer Integration](thermal-receipt-printer.md)
 
